@@ -1,0 +1,31 @@
+# Gradle
+.gradle/
+build/
+
+# IntelliJ
+.idea/
+*.iml
+out/
+
+# Logs
+*.log
+
+# Compiled files
+*.class
+
+# Reports and test output
+*.html
+*.xml
+*.bin
+/test-results/
+reports/
+
+# JARs
+*.jar
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Optional: VS Code
+.vscode/
