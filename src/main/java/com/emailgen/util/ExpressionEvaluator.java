@@ -1,10 +1,12 @@
 package com.emailgen.util;
 
+import com.emailgen.exception.ExpressionEvaluationException;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.experimental.UtilityClass;
 
 /**
  * The {@code ExpressionEvaluator} class provides a basic custom expression engine to generate dynamic email
@@ -24,6 +26,7 @@ import java.util.regex.Pattern;
  *     input1.firstChars(1) ~ "." ~ input2.allChars() ~ "@email.com"
  * </pre>
  */
+@UtilityClass
 public class ExpressionEvaluator {
 
     private static final Map<String, UnaryOperator<String>> NO_ARG_FUNCTIONS
@@ -47,35 +50,49 @@ public class ExpressionEvaluator {
      * @return the evaluated string (e.g., "j.doe@email.com")
      */
     public static String evaluate(String expression, Map<String, String> inputs) {
-        String[] parts = expression.split("~");
-        StringBuilder transformed = new StringBuilder();
-
-        for (String part : parts) {
-            part = part.trim();
-
-            // Check for quoted literals
-            if ((part.startsWith("\"") && part.endsWith("\"")) || (part.startsWith("'") && part.endsWith("'"))) {
-                transformed.append(part.substring(1, part.length() - 1));
-                continue;
-            }
-
-            // Check for input reference with chained functions
-            if (part.startsWith(INPUT_PREFIX)) {
-                int dotIndex = part.indexOf('.');
-                String inputKey = dotIndex > 0 ? part.substring(0, dotIndex) : part;
-                String functionChain = dotIndex > 0 ? part.substring(dotIndex + 1) : null;
-
-                String inputValue = inputs.getOrDefault(inputKey, "");
-                transformed.append(applyFunction(inputValue, functionChain));
-            } else {
-                // Literal that wasn't quoted
-                transformed.append(part);
-            }
+        if (expression == null || expression.isBlank()) {
+            throw new ExpressionEvaluationException("Missing or empty expression");
         }
 
-        return transformed.toString();
+        String[] parts = expression.split("~");
+        StringBuilder result = new StringBuilder();
+
+        for (String part : parts) {
+            result.append(processExpressionPart(part.trim(), inputs));
+        }
+
+        return result.toString();
     }
 
+    private static String processExpressionPart(String part, Map<String, String> inputs) {
+        if (isQuotedLiteral(part)) {
+            return part.substring(1, part.length() - 1);
+        }
+
+        if (part.startsWith(INPUT_PREFIX)) {
+            return processInputReference(part, inputs);
+        }
+
+        return part;
+    }
+
+    private static boolean isQuotedLiteral(String part) {
+        return (part.startsWith("\"") && part.endsWith("\"")) ||
+            (part.startsWith("'") && part.endsWith("'"));
+    }
+
+    private static String processInputReference(String part, Map<String, String> inputs) {
+        int dotIndex = part.indexOf('.');
+        String inputKey = dotIndex > 0 ? part.substring(0, dotIndex) : part;
+        String functionChain = dotIndex > 0 ? part.substring(dotIndex + 1) : null;
+
+        if (!inputs.containsKey(inputKey)) {
+            throw new ExpressionEvaluationException("Missing input for key: " + inputKey);
+        }
+
+        String inputValue = inputs.get(inputKey);
+        return applyFunction(inputValue, functionChain);
+    }
 
     private static String applyFunction(String input, String fullFunctionChain) {
         if (fullFunctionChain == null || fullFunctionChain.isBlank()) {

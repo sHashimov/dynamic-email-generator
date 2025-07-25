@@ -1,5 +1,6 @@
 package com.emailgen.util;
 
+import com.emailgen.exception.ExpressionEvaluationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -65,17 +66,19 @@ class ExpressionEvaluatorTest {
     }
 
     @Test
-    @DisplayName("Handles missing input gracefully")
+    @DisplayName("Throws exception for missing input")
     void testMissingInput() {
         // Arrange
         String expression = "input999.firstChars(2)";
         Map<String, String> inputs = Map.of();
 
-        // Act
-        String result = ExpressionEvaluator.evaluate(expression, inputs);
+        // Act + Assert
+        ExpressionEvaluationException exception = assertThrows(
+            ExpressionEvaluationException.class,
+            () -> ExpressionEvaluator.evaluate(expression, inputs)
+        );
 
-        // Assert
-        assertEquals("", result);
+        assertEquals("Missing input for key: input999", exception.getMessage());
     }
 
     @Test
@@ -150,5 +153,27 @@ class ExpressionEvaluatorTest {
         assertTrue(message.contains("Malformed function call") || message.contains("Invalid argument"));
     }
 
+    @Test
+    @DisplayName("Throws exception when expression is null")
+    void testNullExpressionThrows() {
+        // Act + Assert
+        ExpressionEvaluationException exception = assertThrows(
+            ExpressionEvaluationException.class,
+            () -> ExpressionEvaluator.evaluate(null, Map.of("input1", "John"))
+        );
 
+        assertEquals("Missing or empty expression", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Throws exception when expression is blank")
+    void testBlankExpressionThrows() {
+        // Act + Assert
+        ExpressionEvaluationException exception = assertThrows(
+            ExpressionEvaluationException.class,
+            () -> ExpressionEvaluator.evaluate("   ", Map.of("input1", "John"))
+        );
+
+        assertEquals("Missing or empty expression", exception.getMessage());
+    }
 }
