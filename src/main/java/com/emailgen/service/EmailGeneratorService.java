@@ -3,10 +3,9 @@ package com.emailgen.service;
 import com.emailgen.dto.EmailResponseDTO;
 import com.emailgen.dto.EmailResultItem;
 import com.emailgen.util.ExpressionEvaluator;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Map;
+import org.springframework.stereotype.Service;
 
 @Service
 public class EmailGeneratorService {
