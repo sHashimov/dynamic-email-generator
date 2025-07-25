@@ -2,7 +2,7 @@ package com.emailgen.service;
 
 import com.emailgen.dto.EmailResponseDTO;
 import com.emailgen.dto.EmailResultItem;
-import com.emailgen.util.ExpressionEvaluationException;
+import com.emailgen.exception.ExpressionEvaluationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -36,19 +36,18 @@ class EmailGeneratorServiceTest {
     }
 
     @Test
-    @DisplayName("Returns empty email for missing input")
+    @DisplayName("Throws exception when input is missing")
     void testGenerateEmail_MissingInput() {
         // Arrange
-        Map<String, String> inputs = Map.of(); // input1 is missing
+        Map<String, String> inputs = Map.of();  // missing input1
         String expression = "input1.firstChars(2)";
 
-        // Act
-        EmailResponseDTO response = service.generateEmail(inputs, expression);
-
-        // Assert
-        assertNotNull(response);
-        assertEquals(1, response.getData().size());
-        assertEquals("", response.getData().get(0).getValue());
+        // Act & Assert
+        ExpressionEvaluationException exception = assertThrows(
+            ExpressionEvaluationException.class,
+            () -> service.generateEmail(inputs, expression)
+        );
+        assertEquals("Missing input for key: input1", exception.getMessage());
     }
 
     @Test
@@ -74,5 +73,30 @@ class EmailGeneratorServiceTest {
         assertThrows(ExpressionEvaluationException.class, () ->
             service.generateEmail(inputs, expression));
     }
+
+    @Test
+    @DisplayName("Throws exception when expression is null")
+    void testNullExpressionThrows() {
+        // Arrange
+        Map<String, String> inputs = Map.of("input1", "John");
+
+        // Act & Assert
+        assertThrows(ExpressionEvaluationException.class, () ->
+            service.generateEmail(inputs, null)
+        );
+    }
+
+    @Test
+    @DisplayName("Throws exception when expression is blank")
+    void testBlankExpressionThrows() {
+        // Arrange
+        Map<String, String> inputs = Map.of("input1", "John");
+
+        // Act & Assert
+        assertThrows(ExpressionEvaluationException.class, () ->
+            service.generateEmail(inputs, "  ")
+        );
+    }
+
 }
 
