@@ -1,118 +1,127 @@
 # Dynamic Email Generator
 
-A Spring Boot application that dynamically generates email content based on input values and expression logic. Designed to demonstrate REST API capabilities, input validation, Dockerization, reverse proxy integration with NGINX, and API documentation using Swagger.
+A Spring Boot application that dynamically generates email strings based on user-provided inputs and expression syntax. This repository demonstrates:
+
+* Expression parsing and transformation
+* Swagger API documentation
+* Input validation
+* Dockerization using Eclipse Temurin
+* Reverse proxying with NGINX and HTTPS support
 
 ---
 
-## Tech Stack
+## 📦 Features
 
-* Java 21
-* Spring Boot 3.4.5
-* Spring Web
-* Lombok
-* Springdoc OpenAPI 2.8.6
-* JUnit 5
-* Docker & Docker Compose
-* NGINX (Alpine)
+* API to evaluate dynamic email expressions
+* Expression chaining and input key referencing
+* Detailed validation and error responses
+* Fully containerized with Docker and Docker Compose
+* Exposed via HTTPS using self-signed certificate
 
 ---
 
-## Features
+## 🧪 API Documentation
 
-* Generate dynamic email content based on user input and expressions
-* Validates required query parameters
-* Graceful error handling with custom exception responses
-* Fully documented API via Swagger UI
-* Dockerized backend app with reverse proxy via NGINX
+Swagger UI is available at:
+
+* Local: `http://localhost:8080/swagger-ui.html`
+* Docker/NGINX: `https://localhost:9443/swagger-ui.html`
 
 ---
 
-## Building the Application
+## 🐳 Dockerized Architecture
 
-Set custom JAR name in `build.gradle`:
+This project includes a `docker-compose.yaml` file that orchestrates two services:
 
-```groovy
-bootJar {
-    archiveFileName = 'deg.jar'
-}
+### 1. **Spring Boot App (Eclipse Temurin)**
+
+* **Base image**: `eclipse-temurin:21-jdk-alpine`
+* Runs the application JAR (`deg.jar`)
+* Exposes port `8080` internally
+
+### 2. **NGINX Server**
+
+* **Image**: `nginx:latest`
+* Routes incoming HTTPS (port 9443) traffic to the Spring Boot app
+* SSL termination using self-signed certificate
+* Includes error handling via `custom_502.html`
+
+---
+
+## 🔒 SSL Certificate
+
+A self-signed certificate is generated for secure HTTPS access:
+
+* Located in `certs/` directory
+* Mounted into the NGINX container
+* Instructions to generate:
+
+```bash
+mkdir certs
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout certs/server.key \
+  -out certs/server.crt \
+  -subj "/CN=localhost"
 ```
 
-Then build the app:
+---
+
+## 🛠️ Run Locally
+
+### 1. **Build the Application**
 
 ```bash
 ./gradlew clean build
 ```
 
----
+Ensure `build/libs/deg.jar` is created.
 
-## Running with Docker
-
-Build the Docker image:
-
-```bash
-docker build -t dynamic-email-generator .
-```
-
-Run the container:
-
-```bash
-docker run -p 8080:8080 dynamic-email-generator
-```
-
----
-
-## Running with Docker Compose and NGINX
-
-Start all services:
+### 2. **Start via Docker Compose**
 
 ```bash
 docker-compose up --build
 ```
 
-Access:
-
-* API: `http://localhost/api/v1/generate-email`
-* Swagger UI: `http://localhost/swagger-ui.html`
+Access the API at `https://localhost:9443`
 
 ---
 
-## API Documentation
-
-* Swagger UI: `http://localhost/swagger-ui.html`
-* OpenAPI Spec: `http://localhost/v3/api-docs`
-
----
-
-## Project Structure
+## 📁 Project Structure
 
 ```
-src/
-├── main/
-│   ├── java/com/emailgen/
-│   │   ├── controller/
-│   │   ├── dto/
-│   │   ├── service/
-│   │   ├── util/
-│   │   └── config/
-│   └── resources/
-│       └── application.properties
-└── test/
-    └── java/com/emailgen/...
+.
+├── Dockerfile
+├── docker-compose.yml
+├── nginx.conf
+├── certs/
+│   ├── server.crt
+│   └── server.key
+└── build/libs/deg.jar
 ```
 
 ---
 
-## Running Tests
+## ✅ Covered Technical Requirements
 
-To run all tests:
+| Requirement                               | Status |
+| ----------------------------------------- | ------ |
+| Temurin-based Docker container            | ✅      |
+| NGINX reverse proxy container             | ✅      |
+| HTTPS on port 9443                        | ✅      |
+| Self-signed SSL setup                     | ✅      |
+| Docker Compose orchestration              | ✅      |
+| NGINX error handling (e.g., 502 fallback) | ✅      |
 
-```bash
-./gradlew test
-```
+---
 
-Tests cover:
+## 📌 Notes
 
-* Controller logic
-* Expression evaluation
-* Input validation
-* Exception handling
+* Swagger annotations like `@Operation` are used for endpoint documentation
+* Inputs must be named `input1`, `input2`, ... and passed as query params
+* `expression` is a required parameter (e.g., `input1.firstChars(3)~"_test"`)
+
+---
+
+## 📬 Contact
+
+Created as part of a technical challenge. For questions, open an issue.
