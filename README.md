@@ -100,6 +100,13 @@ Access the API at `https://localhost:9443`
 ```
 
 ---
+⚙️ Continuous Integration (GitHub Actions)
+A GitHub Actions workflow is configured to automate build and test verification:
+Located at .github/workflows/ci.yml
+Runs on every push and pull request targeting master
+Steps include: checkout, JDK setup, Gradle build, and tests
+Healthcheck integration ensures the application responds correctly before marking success
+---
 
 ## ✅ Covered Technical Requirements
 
@@ -121,7 +128,3 @@ Access the API at `https://localhost:9443`
 * `expression` is a required parameter (e.g., `input1.firstChars(3)~"_test"`)
 
 ---
-
-## 📬 Contact
-
-Created as part of a technical challenge. For questions, open an issue.

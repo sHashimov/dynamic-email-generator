@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -51,7 +52,8 @@ class EmailGeneratorControllerIntegrationTest {
                 .param("input1", "Jean")
                 .param("expression", "input1.firstChars(2"))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error", containsString("Malformed function call")));
+            .andExpect(jsonPath("$.error", is("ExpressionError")))
+            .andExpect(jsonPath("$.message", containsString("Malformed function call")));
     }
 
     @Test
@@ -61,7 +63,7 @@ class EmailGeneratorControllerIntegrationTest {
                 .param("input1", "Jean")
                 .param("expression", "input1.unknownFunc(5)"))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error", containsString("Unknown")));
+            .andExpect(jsonPath("$.error", is("ExpressionError")));
     }
 
     @Test
@@ -70,7 +72,8 @@ class EmailGeneratorControllerIntegrationTest {
         mockMvc.perform(get("/api/v1/generate-email")
                 .param("expression", "input999.firstChars(2)"))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").value("Missing input for key: input999"));
+            .andExpect(jsonPath("$.error", is("ExpressionError")))
+            .andExpect(jsonPath("$.message", is("Missing input for key: input999")));
     }
 
     @Test
@@ -90,8 +93,8 @@ class EmailGeneratorControllerIntegrationTest {
         mockMvc.perform(get("/api/v1/generate-email")
                 .param("input2", "Solo") // input1 is missing
                 .param("expression", "input1.firstChars(1)~'.'~input2.allChars()~'@galaxy.com'"))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").value("Missing input for key: input1"));
+            .andExpect(jsonPath("$.error", is("ExpressionError")))
+            .andExpect(jsonPath("$.message", is("Missing input for key: input1")));
     }
 
 }
