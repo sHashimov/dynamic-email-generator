@@ -7,10 +7,8 @@ build/
 *.iml
 out/
 
-# Logs
+# Logs and compiled files
 *.log
-
-# Compiled files
 *.class
 
 # Reports and test output
@@ -20,12 +18,7 @@ out/
 /test-results/
 reports/
 
-# JARs
+# JARs and local OS files
 *.jar
-
-# OS junk
 .DS_Store
 Thumbs.db
-
-# Optional: VS Code
-.vscode/
