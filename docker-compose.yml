@@ -6,15 +6,16 @@ services:
     build:
       context: .
     container_name: email-generator-app
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080" # internal only
 
   nginx:
-    image: nginx:alpine
+    image: nginx:latest
     container_name: email-generator-nginx
     ports:
-      - "80:80"
+      - "9443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./certs:/etc/nginx/ssl
     depends_on:
       - app
