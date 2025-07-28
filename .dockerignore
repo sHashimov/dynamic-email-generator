@@ -1,0 +1,24 @@
+# Ignore all of build except the jar
+/build/*
+!/build/libs/
+!/build/libs/deg.jar
+
+# Ignore Gradle config
+/.gradle
+
+# Ignore logs and temp files
+*.log
+*.tmp
+
+# Ignore IntelliJ IDEA files
+.idea
+*.iml
+
+# Ignore test results and reports
+/reports
+/test-results
+
+# Ignore local environment files
+.env
+*.swp
+.DS_Store
