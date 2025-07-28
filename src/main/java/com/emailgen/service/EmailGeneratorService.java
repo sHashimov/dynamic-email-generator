@@ -10,8 +10,17 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailGeneratorService {
 
-    public EmailResponseDTO generateEmail(Map<String, String> inputs, String expression) {
-        String evaluatedEmail = ExpressionEvaluator.evaluate(expression, inputs);
-        return new EmailResponseDTO(List.of(new EmailResultItem(evaluatedEmail, evaluatedEmail)));
+    public EmailResponseDTO generateEmails(Map<String, String> inputs, List<String> expressions) {
+        if (expressions == null || expressions.isEmpty()) {
+            throw new IllegalArgumentException("At least one expression is required.");
+        }
+
+        List<EmailResultItem> results = ExpressionEvaluator.evaluateAll(expressions, inputs)
+            .stream()
+            .map(email -> new EmailResultItem(email, email))
+            .toList();
+
+        return new EmailResponseDTO(results);
     }
 }
+
