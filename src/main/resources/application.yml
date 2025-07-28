@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: dynamic-email-generator
+  profiles:
+    active: dev
+    group:
+      prod:
+        - prod
+      dev:
+        - dev
+
+server:
+  address: 0.0.0.0
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,env
+  endpoint:
+    health:
+      show-details: always
+  health:
+    defaults:
+      enabled: false
+    diskspace:
+      enabled: true
+
+logging:
+  level:
+    org.springdoc: DEBUG
+
+swagger:
+  enabled: ${SWAGGER_ENABLED:true}
