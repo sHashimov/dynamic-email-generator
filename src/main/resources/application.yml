@@ -3,11 +3,8 @@ spring:
     name: dynamic-email-generator
   profiles:
     active: dev
-    group:
-      prod:
-        - prod
-      dev:
-        - dev
+  config:
+    import: optional:application-${spring.profiles.active}.yml
 
 server:
   address: 0.0.0.0
@@ -29,6 +26,3 @@ management:
 logging:
   level:
     org.springdoc: DEBUG
-
-swagger:
-  enabled: ${SWAGGER_ENABLED:true}
