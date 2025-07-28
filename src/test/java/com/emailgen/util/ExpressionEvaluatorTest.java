@@ -4,6 +4,7 @@ import com.emailgen.exception.ExpressionEvaluationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -11,55 +12,35 @@ import static org.junit.jupiter.api.Assertions.*;
 class ExpressionEvaluatorTest {
 
     @Test
-    @DisplayName("Evaluates firstChars(n) correctly")
+    @DisplayName("Evaluates first:n correctly")
     void testFirstChars() {
-        // Arrange
-        String expression = "input1.firstChars(2)";
+        String expression = "{input1|first:2}";
         Map<String, String> inputs = Map.of("input1", "Jonathan");
-
-        // Act
-        String result = ExpressionEvaluator.evaluate(expression, inputs);
-
-        // Assert
-        assertEquals("Jo", result);
+        assertEquals("Jo", ExpressionEvaluator.evaluate(expression, inputs));
     }
 
     @Test
-    @DisplayName("Evaluates lastChars(n) correctly")
+    @DisplayName("Evaluates last:n correctly")
     void testLastChars() {
-        // Arrange
-        String expression = "input2.lastChars(3)";
+        String expression = "{input2|last:3}";
         Map<String, String> inputs = Map.of("input2", "Anderson");
-
-        // Act
-        String result = ExpressionEvaluator.evaluate(expression, inputs);
-
-        // Assert
-        assertEquals("son", result);
+        assertEquals("son", ExpressionEvaluator.evaluate(expression, inputs));
     }
 
     @Test
-    @DisplayName("Evaluates allChars() correctly")
+    @DisplayName("Evaluates all correctly")
     void testAllChars() {
-        // Arrange
-        String expression = "input3.allChars()";
+        String expression = "{input3|all}";
         Map<String, String> inputs = Map.of("input3", "Hello");
-
-        // Act
-        String result = ExpressionEvaluator.evaluate(expression, inputs);
-
-        // Assert
-        assertEquals("Hello", result);
+        assertEquals("Hello", ExpressionEvaluator.evaluate(expression, inputs));
     }
 
     @Test
     @DisplayName("Throws exception for unknown function")
     void testThrowsOnUnknownFunction() {
-        // Arrange
-        String expression = "input1.someUnknownFunc(5)";
+        String expression = "{input1|someUnknownFunc:5}";
         Map<String, String> inputs = Map.of("input1", "Test");
 
-        // Act & Assert
         Exception exception = assertThrows(ExpressionEvaluationException.class,
             () -> ExpressionEvaluator.evaluate(expression, inputs));
         assertTrue(exception.getMessage().toLowerCase().contains("unknown"));
@@ -68,11 +49,9 @@ class ExpressionEvaluatorTest {
     @Test
     @DisplayName("Throws exception for missing input")
     void testMissingInput() {
-        // Arrange
-        String expression = "input999.firstChars(2)";
+        String expression = "{input999|first:2}";
         Map<String, String> inputs = Map.of();
 
-        // Act + Assert
         ExpressionEvaluationException exception = assertThrows(
             ExpressionEvaluationException.class,
             () -> ExpressionEvaluator.evaluate(expression, inputs)
@@ -84,57 +63,37 @@ class ExpressionEvaluatorTest {
     @Test
     @DisplayName("Supports quoted strings and glue")
     void testQuotedLiterals() {
-        // Arrange
-        String expression = "\"prefix_\"~input1.allChars()~\"_suffix\"";
+        String expression = "\"prefix_\"~{input1|all}~\"_suffix\"";
         Map<String, String> inputs = Map.of("input1", "core");
-
-        // Act
-        String result = ExpressionEvaluator.evaluate(expression, inputs);
-
-        // Assert
-        assertEquals("prefix_core_suffix", result);
+        assertEquals("prefix_core_suffix", ExpressionEvaluator.evaluate(expression, inputs));
     }
 
     @Test
-    @DisplayName("Supports chaining: firstChars + lower")
+    @DisplayName("Supports chaining: first + lower")
     void testChainedFunctionCalls() {
-        // Arrange
-        String expression = "input1.firstChars(2).lower()";
+        String expression = "{input1|first:2|lower}";
         Map<String, String> inputs = Map.of("input1", "Han");
-
-        // Act
-        String result = ExpressionEvaluator.evaluate(expression, inputs);
-
-        // Assert
-        assertEquals("ha", result);
+        assertEquals("ha", ExpressionEvaluator.evaluate(expression, inputs));
     }
 
     @Test
     @DisplayName("Evaluates full email generation expression")
     void testComplexEmailExpression() {
-        // Arrange
-        String expression = "input1.firstChars(1).lower()~'.'~input2.lastChars(3).lower()~'@'~input3.allChars().lower()~'.com'";
+        String expression = "{input1|first:1|lower}~'.'~{input2|last:3|lower}~'@'~{input3|all|lower}~'.com'";
         Map<String, String> inputs = Map.of(
             "input1", "Han",
             "input2", "Solo",
             "input3", "Galaxy"
         );
-
-        // Act
-        String result = ExpressionEvaluator.evaluate(expression, inputs);
-
-        // Assert
-        assertEquals("h.olo@galaxy.com", result);
+        assertEquals("h.olo@galaxy.com", ExpressionEvaluator.evaluate(expression, inputs));
     }
 
     @Test
     @DisplayName("Throws exception for malformed function call")
     void testMalformedFunctionCall() {
-        // Arrange
-        String expression = "input1.firstChars(2";
+        String expression = "{input1|first:2";  // Missing closing '}'
         Map<String, String> inputs = Map.of("input1", "Test");
 
-        // Act & Assert
         assertThrows(ExpressionEvaluationException.class,
             () -> ExpressionEvaluator.evaluate(expression, inputs));
     }
@@ -142,38 +101,74 @@ class ExpressionEvaluatorTest {
     @Test
     @DisplayName("Throws exception for non-numeric argument")
     void testNonNumericArgument() {
-        // Arrange
-        String expression = "input1.firstChars(x)";
+        String expression = "{input1|first:x}";
         Map<String, String> inputs = Map.of("input1", "Hello");
 
-        // Act & Assert
         Exception exception = assertThrows(ExpressionEvaluationException.class,
             () -> ExpressionEvaluator.evaluate(expression, inputs));
-        String message = exception.getMessage();
-        assertTrue(message.contains("Malformed function call") || message.contains("Invalid argument"));
+        assertTrue(exception.getMessage().contains("Invalid argument") || exception.getMessage().contains("Malformed"));
     }
 
     @Test
     @DisplayName("Throws exception when expression is null")
     void testNullExpressionThrows() {
-        // Act + Assert
         ExpressionEvaluationException exception = assertThrows(
             ExpressionEvaluationException.class,
             () -> ExpressionEvaluator.evaluate(null, Map.of("input1", "John"))
         );
-
         assertEquals("Missing or empty expression", exception.getMessage());
     }
 
     @Test
     @DisplayName("Throws exception when expression is blank")
     void testBlankExpressionThrows() {
-        // Act + Assert
         ExpressionEvaluationException exception = assertThrows(
             ExpressionEvaluationException.class,
             () -> ExpressionEvaluator.evaluate("   ", Map.of("input1", "John"))
         );
-
         assertEquals("Missing or empty expression", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Evaluates multiple expressions correctly")
+    void testEvaluateAll_Success() {
+        List<String> expressions = List.of(
+            "{input1|first:1|lower}~'.'~{input2|all|lower}",
+            "{input2|upper}~'_'~{input1|last:2|upper}"
+        );
+        Map<String, String> inputs = Map.of(
+            "input1", "Han",
+            "input2", "Solo"
+        );
+
+        List<String> results = ExpressionEvaluator.evaluateAll(expressions, inputs);
+
+        assertEquals(2, results.size());
+        assertEquals("h.solo", results.get(0));
+        assertEquals("SOLO_AN", results.get(1));
+    }
+
+    @Test
+    @DisplayName("Throws exception when expressions list is null")
+    void testEvaluateAll_NullExpressions() {
+        Map<String, String> inputs = Map.of("input1", "Han");
+
+        ExpressionEvaluationException ex = assertThrows(
+            ExpressionEvaluationException.class,
+            () -> ExpressionEvaluator.evaluateAll(null, inputs)
+        );
+        assertEquals("At least one expression is required.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Throws exception when expressions list is empty")
+    void testEvaluateAll_EmptyExpressions() {
+        Map<String, String> inputs = Map.of("input1", "Han");
+
+        ExpressionEvaluationException ex = assertThrows(
+            ExpressionEvaluationException.class,
+            () -> ExpressionEvaluator.evaluateAll(List.of(), inputs)
+        );
+        assertEquals("At least one expression is required.", ex.getMessage());
     }
 }

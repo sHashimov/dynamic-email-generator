@@ -1,16 +1,20 @@
 package com.emailgen.controller;
 
+import com.emailgen.dto.EmailGenerationRequestDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import java.util.List;
+import java.util.Map;
+
+import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -20,15 +24,25 @@ class EmailGeneratorControllerIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Test
-    @DisplayName("Returns generated email with valid inputs and expression")
+    @DisplayName("Returns generated email with valid inputs and expressions")
     void testGenerateEmailSuccess() throws Exception {
-        mockMvc.perform(get("/api/v1/generate-email")
-                .param("input1", "Jean")
-                .param("input2", "Solo")
-                .param("input3", "galaxy")
-                .param("expression",
-                    "input1.firstChars(1).lower()~'.'~input2.allChars().lower()~'@'~input3.allChars().lower()~\".com\""))
+        EmailGenerationRequestDTO request = new EmailGenerationRequestDTO();
+        request.setInputs(Map.of(
+            "input1", "Jean",
+            "input2", "Solo",
+            "input3", "galaxy"
+        ));
+        request.setExpressions(List.of(
+            "{input1|first:1|lower}~'.'~{input2|all|lower}~'@'~{input3|all|lower}~\".com\""
+        ));
+
+        mockMvc.perform(post("/api/v1/generate-email")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data", hasSize(1)))
             .andExpect(jsonPath("$.data[0].id").value("j.solo@galaxy.com"))
@@ -36,41 +50,60 @@ class EmailGeneratorControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("Returns 400 when expression is missing")
-    void testMissingExpressionParam() throws Exception {
-        mockMvc.perform(get("/api/v1/generate-email")
-                .param("input1", "Jean")
-                .param("input2", "Solo"))
+    @DisplayName("Returns 400 when expressions list is missing or empty")
+    void testMissingExpressionsList() throws Exception {
+        EmailGenerationRequestDTO request = new EmailGenerationRequestDTO();
+        request.setInputs(Map.of("input1", "Jean"));
+        request.setExpressions(null);
+
+        mockMvc.perform(post("/api/v1/generate-email")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("BadRequest"))
-            .andExpect(jsonPath("$.message").value("The 'expression' parameter is required."));
+            .andExpect(jsonPath("$.message", containsString("At least one expression")));
     }
 
     @Test
     @DisplayName("Returns 400 when expression is malformed")
     void testMalformedExpression() throws Exception {
-        mockMvc.perform(get("/api/v1/generate-email")
-                .param("input1", "Jean")
-                .param("expression", "input1.firstChars(2"))
+        EmailGenerationRequestDTO request = new EmailGenerationRequestDTO();
+        request.setInputs(Map.of("input1", "Jean"));
+        request.setExpressions(List.of("{input1|first:2"));
+
+        mockMvc.perform(post("/api/v1/generate-email")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error", is("ExpressionError")))
-            .andExpect(jsonPath("$.message", containsString("Malformed function call")));
+            .andExpect(jsonPath("$.message", containsString("Malformed expression part")));
     }
 
     @Test
     @DisplayName("Returns 400 when function is unknown")
     void testUnknownFunctionInExpression() throws Exception {
-        mockMvc.perform(get("/api/v1/generate-email")
-                .param("input1", "Jean")
-                .param("expression", "input1.unknownFunc(5)"))
+        EmailGenerationRequestDTO request = new EmailGenerationRequestDTO();
+        request.setInputs(Map.of("input1", "Jean"));
+        request.setExpressions(List.of("{input1|unknownFunc:5}"));
+
+        mockMvc.perform(post("/api/v1/generate-email")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error", is("ExpressionError")));
+            .andExpect(jsonPath("$.error", is("ExpressionError")))
+            .andExpect(jsonPath("$.message", containsString("Malformed expression part")));
     }
 
     @Test
     @DisplayName("Returns 400 when referenced input key is missing")
     void testMissingInputKeyGraceful() throws Exception {
-        mockMvc.perform(get("/api/v1/generate-email")
-                .param("expression", "input999.firstChars(2)"))
+        EmailGenerationRequestDTO request = new EmailGenerationRequestDTO();
+        request.setInputs(Map.of());
+        request.setExpressions(List.of("{input999|first:2}"));
+
+        mockMvc.perform(post("/api/v1/generate-email")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error", is("ExpressionError")))
             .andExpect(jsonPath("$.message", is("Missing input for key: input999")));
@@ -79,9 +112,13 @@ class EmailGeneratorControllerIntegrationTest {
     @Test
     @DisplayName("Returns 400 when input key is invalid")
     void testInvalidInputKey() throws Exception {
-        mockMvc.perform(get("/api/v1/generate-email")
-                .param("badKey", "Han")
-                .param("expression", "input1.firstChars(1)"))
+        EmailGenerationRequestDTO request = new EmailGenerationRequestDTO();
+        request.setInputs(Map.of("badKey", "Han"));
+        request.setExpressions(List.of("{input1|first:1}"));
+
+        mockMvc.perform(post("/api/v1/generate-email")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("BadRequest"))
             .andExpect(jsonPath("$.message").value("Invalid input key: badKey"));
@@ -90,11 +127,15 @@ class EmailGeneratorControllerIntegrationTest {
     @Test
     @DisplayName("Returns 400 when an input key referenced in expression is missing")
     void testMissingInputKeyInExpression() throws Exception {
-        mockMvc.perform(get("/api/v1/generate-email")
-                .param("input2", "Solo") // input1 is missing
-                .param("expression", "input1.firstChars(1)~'.'~input2.allChars()~'@galaxy.com'"))
+        EmailGenerationRequestDTO request = new EmailGenerationRequestDTO();
+        request.setInputs(Map.of("input2", "Solo"));
+        request.setExpressions(List.of("{input1|first:1}~'.'~{input2|all}~'@galaxy.com'"));
+
+        mockMvc.perform(post("/api/v1/generate-email")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error", is("ExpressionError")))
             .andExpect(jsonPath("$.message", is("Missing input for key: input1")));
     }
-
 }

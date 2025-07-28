@@ -1,60 +1,63 @@
 # Dynamic Email Generator
 
-A Spring Boot application that dynamically generates email strings based on user-provided inputs and expression syntax. This repository demonstrates:
+A Spring Boot application that dynamically generates email addresses based on user-defined inputs and a custom expression language. It includes API documentation, Docker support, HTTPS reverse proxying, and detailed usage examples.
 
-* Expression parsing and transformation
+---
+
+## Features
+
+* Dynamic expression parsing and evaluation
+* Multiple expression support per request
+* Input validation and error handling
+* Dockerized with HTTPS via NGINX reverse proxy
 * Swagger API documentation
-* Input validation
-* Dockerization using Eclipse Temurin
-* Reverse proxying with NGINX and HTTPS support
 
 ---
 
-## 📦 Features
+## API Documentation
 
-* API to evaluate dynamic email expressions
-* Expression chaining and input key referencing
-* Detailed validation and error responses
-* Fully containerized with Docker and Docker Compose
-* Exposed via HTTPS using self-signed certificate
-
----
-
-## 🧪 API Documentation
-
-Swagger UI is available at:
+Swagger UI:
 
 * Local: `http://localhost:8080/swagger-ui.html`
 * Docker/NGINX: `https://localhost:9443/swagger-ui.html`
 
 ---
 
-## 🐳 Dockerized Architecture
+## Run Locally
 
-This project includes a `docker-compose.yaml` file that orchestrates two services:
+### 1. Build the Application
 
-### 1. **Spring Boot App (Eclipse Temurin)**
+```bash
+./gradlew clean build
+```
 
-* **Base image**: `eclipse-temurin:21-jdk-alpine`
-* Runs the application JAR (`deg.jar`)
-* Exposes port `8080` internally
+Ensure `build/libs/deg.jar` is created.
 
-### 2. **NGINX Server**
+### 2. Start via Docker Compose
 
-* **Image**: `nginx:latest`
-* Routes incoming HTTPS (port 9443) traffic to the Spring Boot app
-* SSL termination using self-signed certificate
-* Includes error handling via `custom_502.html`
+```bash
+docker-compose up --build
+```
+
+API will be available at: `https://localhost:9443`
 
 ---
 
-## 🔒 SSL Certificate
+### Spring Boot App
 
-A self-signed certificate is generated for secure HTTPS access:
+* Base image: `eclipse-temurin:21-jdk-alpine`
+* Exposes port `8080`
 
-* Located in `certs/` directory
-* Mounted into the NGINX container
-* Instructions to generate:
+### NGINX Reverse Proxy
+
+* Routes HTTPS on port `9443` to the Spring Boot app
+* Uses a self-signed certificate (`certs/`)
+
+---
+
+## SSL Setup
+
+To generate a self-signed certificate:
 
 ```bash
 mkdir certs
@@ -66,65 +69,67 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 
 ---
 
-## 🛠️ Run Locally
+## Expression Language
 
-### 1. **Build the Application**
+The application supports a custom expression language for email generation.
 
-```bash
-./gradlew clean build
+### Basic Syntax
+
+* Input variables: `{input1}`, `{input2}`, etc.
+* Functions are chained with `|`
+* Combine parts with `~`
+
+Example:
+
+```text
+{input1|first:1|lower}~'.'~{input2|all|lower}~'@'~{input3|lower}~'.com'
 ```
 
-Ensure `build/libs/deg.jar` is created.
+### Supported Functions
 
-### 2. **Start via Docker Compose**
+| Function | Args | Description              |
+| -------- | ---- | ------------------------ |
+| `first`  | :n   | First n characters       |
+| `last`   | :n   | Last n characters        |
+| `all`    | —    | Full input               |
+| `lower`  | —    | Lowercase transformation |
+| `upper`  | —    | Uppercase transformation |
 
-```bash
-docker-compose up --build
+### Multiple Expressions
+
+Send multiple expressions in one request to generate multiple outputs.
+
+Example:
+
+```json
+{
+  "inputs": {
+    "input1": "Jane",
+    "input2": "Doe"
+  },
+  "expressions": [
+    "{input1|first:1|lower}~'.'~{input2|all|lower}~'@example.com'",
+    "{input1|all|lower}~'.'~{input2|first:2|lower}~'@example.com'"
+  ]
+}
 ```
 
-Access the API at `https://localhost:9443`
+### Errors
+
+* Malformed expressions return 400 with descriptive error messages
+* Missing inputs or invalid function names will be flagged accordingly
+
+For full usage details and examples, see [USAGE.md](USAGE.md)
 
 ---
 
-## 📁 Project Structure
+## CI Pipeline
 
-```
-.
-├── Dockerfile
-├── docker-compose.yml
-├── nginx.conf
-├── certs/
-│   ├── server.crt
-│   └── server.key
-└── build/libs/deg.jar
-```
+GitHub Actions workflow:
 
----
-⚙️ Continuous Integration (GitHub Actions)
-A GitHub Actions workflow is configured to automate build and test verification:
-Located at .github/workflows/ci.yml
-Runs on every push and pull request targeting master
-Steps include: checkout, JDK setup, Gradle build, and tests
-Healthcheck integration ensures the application responds correctly before marking success
----
-
-## ✅ Covered Technical Requirements
-
-| Requirement                               | Status |
-| ----------------------------------------- | ------ |
-| Temurin-based Docker container            | ✅      |
-| NGINX reverse proxy container             | ✅      |
-| HTTPS on port 9443                        | ✅      |
-| Self-signed SSL setup                     | ✅      |
-| Docker Compose orchestration              | ✅      |
-| NGINX error handling (e.g., 502 fallback) | ✅      |
+* Location: `.github/workflows/ci.yml`
+* Triggers on push and PR to `master`
+* Steps: checkout, JDK setup, build, test, healthcheck
 
 ---
 
-## 📌 Notes
-
-* Swagger annotations like `@Operation` are used for endpoint documentation
-* Inputs must be named `input1`, `input2`, ... and passed as query params
-* `expression` is a required parameter (e.g., `input1.firstChars(3)~"_test"`)
-
----
