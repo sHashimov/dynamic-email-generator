@@ -1,4 +1,4 @@
-package com.emailgen.dto;
+package com.emailgen.dto.email;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
