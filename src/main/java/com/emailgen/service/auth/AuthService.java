@@ -32,7 +32,11 @@ public class AuthService {
             );
             log.info("User '{}' authenticated successfully", request.getUsername());
 
-            String token = jwtUtil.generateToken(authentication.getName());
+            var roles = authentication.getAuthorities().stream()
+                .map(authority -> authority.getAuthority().replace("ROLE_", ""))
+                .toList();
+
+            String token = jwtUtil.generateToken(authentication.getName(), roles);
             return new AuthResponse(token);
         } catch (BadCredentialsException ex) {
             log.warn("Authentication failed for user '{}'", request.getUsername());
