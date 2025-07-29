@@ -1,7 +1,7 @@
-package com.emailgen.service;
+package com.emailgen.service.email;
 
-import com.emailgen.dto.EmailResponseDTO;
-import com.emailgen.dto.EmailResultItem;
+import com.emailgen.dto.email.EmailResponseDTO;
+import com.emailgen.dto.email.EmailResultItem;
 import com.emailgen.exception.ExpressionEvaluationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
