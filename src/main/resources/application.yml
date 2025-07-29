@@ -26,3 +26,6 @@ management:
 logging:
   level:
     org.springdoc: DEBUG
+jwt:
+  secret: E8nDd5XlKr7WpG9sQyZmJ2vTxUeHaKb3
+  expiration: 3600000

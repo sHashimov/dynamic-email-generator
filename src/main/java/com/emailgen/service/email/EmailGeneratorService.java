@@ -1,7 +1,7 @@
-package com.emailgen.service;
+package com.emailgen.service.email;
 
-import com.emailgen.dto.EmailResponseDTO;
-import com.emailgen.dto.EmailResultItem;
+import com.emailgen.dto.email.EmailResponseDTO;
+import com.emailgen.dto.email.EmailResultItem;
 import com.emailgen.util.ExpressionEvaluator;
 import java.util.List;
 import java.util.Map;

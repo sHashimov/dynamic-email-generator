@@ -1,15 +1,14 @@
-package com.emailgen.controller;
+package com.emailgen.controller.email;
 
-import com.emailgen.dto.EmailGenerationRequestDTO;
-import com.emailgen.dto.EmailResponseDTO;
-import com.emailgen.service.EmailGeneratorService;
+import com.emailgen.dto.email.EmailGenerationRequestDTO;
+import com.emailgen.dto.email.EmailResponseDTO;
+import com.emailgen.service.email.EmailGeneratorService;
 import com.emailgen.util.InputParamResolver;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
