@@ -183,3 +183,19 @@ GitHub Actions workflow:
 * Steps: checkout, JDK setup, build, test, healthcheck
 
 ---
+
+## Postman Collection
+
+To test the API interactively:
+
+1. Open Postman
+2. Import the following:
+   - `dynamic-email-generator.postman_collection.json`
+   - `dev.postman_environment.json`
+3. Switch to Dynamic Email Generator - Dev environment
+4. In the "Auth - Login" request, click **Send** to generate a JWT token
+5. Use the "Generate Email" request to test dynamic expression processing
+
+Make sure your local server is running and accessible at `https://localhost:9443`.
+
+---

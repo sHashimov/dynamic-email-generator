@@ -1,0 +1,133 @@
+{
+  "info": {
+    "name": "Dynamic Email Generator",
+    "_postman_id": "deg-collection-id",
+    "description": "API test collection for Dynamic Email Generator",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.token) {",
+              "  pm.environment.set(\"jwt\", jsonData.token);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Generate Email (GET)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/generate-email?input1={{input1}}&input2={{input2}}&input4={{input4}}&input7={{input7}}&input9={{input9}}&input11={{input11}}&expression={{expression}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "generate-email"
+          ],
+          "query": [
+            {
+              "key": "input1",
+              "value": "{{input1}}"
+            },
+            {
+              "key": "input2",
+              "value": "{{input2}}"
+            },
+            {
+              "key": "input4",
+              "value": "{{input4}}"
+            },
+            {
+              "key": "input7",
+              "value": "{{input7}}"
+            },
+            {
+              "key": "input9",
+              "value": "{{input9}}"
+            },
+            {
+              "key": "input11",
+              "value": "{{input11}}"
+            },
+            {
+              "key": "expression",
+              "value": "{{expression}}"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Generate Email (POST)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"inputs\": {\n    \"input1\": \"{{input1}}\",\n    \"input2\": \"{{input2}}\",\n    \"input4\": \"{{input4}}\",\n    \"input7\": \"{{input7}}\",\n    \"input9\": \"{{input9}}\",\n    \"input11\": \"{{input11}}\"\n  },\n  \"expressions\": [\n    \"{input1|first:1} ~ \\\".\\\" ~ {input9|last:3} ~ \\\"@\\\" ~ {input7} ~ \\\".\\\" ~ {input4} ~ \\\".\\\" ~ {input11}\"\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/generate-email",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "generate-email"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
