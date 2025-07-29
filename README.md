@@ -39,8 +39,6 @@ Ensure `build/libs/deg.jar` is created.
 docker-compose up --build
 ```
 
-API will be available at: `https://localhost:9443`
-
 ---
 
 ### Spring Boot App
@@ -114,7 +112,60 @@ Example:
 }
 ```
 
-### Errors
+---
+
+## API Endpoints
+
+### POST `/api/v1/generate-email`
+
+Generates email(s) using the given inputs and expressions.
+
+**Request Body**:
+
+```json
+{
+  "inputs": {
+    "input1": "Jane",
+    "input2": "Doe"
+  },
+  "expressions": [
+    "{input1|first:1|lower}~'.'~{input2|all|lower}~'@example.com'"
+  ]
+}
+```
+
+**Response**:
+
+```json
+{
+  "data": [
+    {
+      "id": "j.doe@example.com",
+      "value": "j.doe@example.com"
+    }
+  ]
+}
+```
+
+### GET `/api/v1/generate-email`
+
+Generates email using query parameters.
+
+**Query Parameters**:
+
+- `expression` (required): The expression string to evaluate
+- `inputN` (optional): Individual input parameters, e.g., `input1=Jane`
+- `allParams` (optional): JSON string with inputs, used as a fallback
+
+Example:
+
+```url
+/api/v1/generate-email?expression={input1|first:1|lower}~'.'~{input2|all|lower}~'@example.com'&input1=Jane&input2=Doe
+```
+
+---
+
+## Errors
 
 * Malformed expressions return 400 with descriptive error messages
 * Missing inputs or invalid function names will be flagged accordingly
@@ -132,4 +183,3 @@ GitHub Actions workflow:
 * Steps: checkout, JDK setup, build, test, healthcheck
 
 ---
-

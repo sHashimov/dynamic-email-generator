@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -138,4 +139,37 @@ class EmailGeneratorControllerIntegrationTest {
             .andExpect(jsonPath("$.error", is("ExpressionError")))
             .andExpect(jsonPath("$.message", is("Missing input for key: input1")));
     }
+
+    @Test
+    @DisplayName("GET /generate-email - Returns email from valid query parameters")
+    void testGenerateEmailViaQueryParams_Success() throws Exception {
+        mockMvc.perform(get("/api/v1/generate-email")
+                .param("expression", "{input1|first:1|lower}~'.'~{input2|all|lower}~'@example.com'")
+                .param("input1", "Jane")
+                .param("input2", "Doe"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.data[0].value").value("j.doe@example.com"));
+    }
+
+    @Test
+    @DisplayName("GET /generate-email - Missing expression parameter returns 400")
+    void testGenerateEmailViaQueryParams_MissingExpression() throws Exception {
+        mockMvc.perform(get("/api/v1/generate-email")
+                .param("input1", "Jane")
+                .param("input2", "Doe"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value(containsString("expression")));
+    }
+
+    @Test
+    @DisplayName("GET /generate-email - Invalid input key returns 400")
+    void testGenerateEmailViaQueryParams_InvalidInputKey() throws Exception {
+        mockMvc.perform(get("/api/v1/generate-email")
+                .param("expression", "{input1|all|lower}")
+                .param("name", "John"))  // invalid input key
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value(containsString("input")));
+    }
+
 }
