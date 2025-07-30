@@ -13,6 +13,8 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,6 +26,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("api/v1")
 @RequiredArgsConstructor
 public class EmailGeneratorController {
+
+    private static final Logger log = LoggerFactory.getLogger(EmailGeneratorController.class);
 
     private final EmailGeneratorService service;
 
@@ -54,7 +58,9 @@ public class EmailGeneratorController {
             throw new IllegalArgumentException("At least one expression is required.");
         }
 
-        return service.generateEmails(request.getInputs(), request.getExpressions());
+        EmailResponseDTO response = service.generateEmails(request.getInputs(), request.getExpressions());
+        log.info("Generated {} email(s) successfully", response.getData().size());
+        return response;
     }
 
     @Operation(
@@ -77,11 +83,15 @@ public class EmailGeneratorController {
         @RequestParam Map<String, String> inputParams,
         @RequestParam(name = "allParams", required = false) String allParamsJson
     ) {
+        log.info("Received GET request to generate email with expression: {}", expression);
+
         if (expression == null || expression.isBlank()) {
             throw new IllegalArgumentException("The 'expression' parameter is required.");
         }
 
         Map<String, String> resolvedInputs = InputParamResolver.resolveInputs(inputParams, allParamsJson);
+        log.debug("Resolved {} input parameters", resolvedInputs.size());
+
         return service.generateEmails(resolvedInputs, List.of(expression));
     }
 }

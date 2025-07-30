@@ -49,13 +49,13 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        UserDetails user = User.withUsername("genuser")
-            .password(passwordEncoder().encode("genuser123"))
+        UserDetails user = User.withUsername("deguser")
+            .password(passwordEncoder().encode("deguser123"))
             .roles(Roles.USER)
             .build();
 
-        UserDetails admin = User.withUsername("genadmin")
-            .password(passwordEncoder().encode("genadmin123"))
+        UserDetails admin = User.withUsername("degadmin")
+            .password(passwordEncoder().encode("degadmin123"))
             .roles(Roles.ADMIN)
             .build();
 

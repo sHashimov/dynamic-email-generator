@@ -106,7 +106,8 @@ class ExpressionEvaluatorTest {
 
         Exception exception = assertThrows(ExpressionEvaluationException.class,
             () -> ExpressionEvaluator.evaluate(expression, inputs));
-        assertTrue(exception.getMessage().contains("Invalid argument") || exception.getMessage().contains("Malformed"));
+        assertTrue(
+            exception.getMessage().contains("Invalid argument") || exception.getMessage().contains("Malformed"));
     }
 
     @Test
@@ -170,5 +171,38 @@ class ExpressionEvaluatorTest {
             () -> ExpressionEvaluator.evaluateAll(List.of(), inputs)
         );
         assertEquals("At least one expression is required.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Throws exception for unknown no-arg function")
+    void testUnknownNoArgFunction() {
+        String expression = "{input1|foobar}";
+        Map<String, String> inputs = Map.of("input1", "Hello");
+
+        Exception exception = assertThrows(ExpressionEvaluationException.class,
+            () -> ExpressionEvaluator.evaluate(expression, inputs));
+
+        assertTrue(exception.getMessage().contains("Unknown no-arg function"));
+    }
+
+    @Test
+    @DisplayName("Throws exception for too many colons in function call")
+    void testTooManyColonsInFunction() {
+        String expression = "{input1|first:2:extra}";
+        Map<String, String> inputs = Map.of("input1", "Hello");
+
+        ExpressionEvaluationException ex = assertThrows(ExpressionEvaluationException.class,
+            () -> ExpressionEvaluator.evaluate(expression, inputs));
+
+        assertTrue(ex.getMessage().contains("Malformed function"));
+    }
+
+    @Test
+    @DisplayName("Handles trailing empty function call gracefully")
+    void testTrailingPipeIgnored() {
+        String expression = "{input1|first:2|}";
+        Map<String, String> inputs = Map.of("input1", "World");
+
+        assertEquals("Wo", ExpressionEvaluator.evaluate(expression, inputs));
     }
 }
