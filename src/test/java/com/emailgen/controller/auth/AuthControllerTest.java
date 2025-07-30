@@ -40,7 +40,7 @@ class AuthControllerTest {
 
     @Test
     void login_success_returnsJwt() throws Exception {
-        AuthRequest request = new AuthRequest("genuser", "genuser123");
+        AuthRequest request = new AuthRequest("deguser", "deguser123");
 
         mockMvc.perform(post("/api/v1/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
