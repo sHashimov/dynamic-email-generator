@@ -10,7 +10,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 
 import java.util.List;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -32,7 +31,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void authenticate_shouldReturnToken_whenCredentialsAreValid() {
+    void testAuthenticate_shouldReturnToken_whenCredentialsAreValid() {
         AuthRequest request = new AuthRequest("user", "pass");
 
         Authentication mockAuth = new UsernamePasswordAuthenticationToken(
@@ -60,7 +59,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void authenticate_shouldThrowInvalidCredentialsException_whenBadCredentials() {
+    void testAuthenticate_shouldThrowInvalidCredentialsException_whenBadCredentials() {
         AuthRequest request = new AuthRequest("user", "wrongpass");
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
@@ -75,9 +74,4 @@ class AuthServiceTest {
         verifyNoInteractions(jwtUtil);
     }
 
-    private GrantedAuthority mockAuthority(String role) {
-        GrantedAuthority authority = mock(GrantedAuthority.class);
-        when(authority.getAuthority()).thenReturn(role);
-        return authority;
-    }
 }
