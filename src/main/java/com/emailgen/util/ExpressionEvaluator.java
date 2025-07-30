@@ -7,6 +7,8 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.experimental.UtilityClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The {@code ExpressionEvaluator} class provides a lightweight expression parser
@@ -28,6 +30,7 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 public class ExpressionEvaluator {
+    private static final Logger log = LoggerFactory.getLogger(ExpressionEvaluator.class);
 
     private static final Map<String, UnaryOperator<String>> NO_ARG_FUNCTIONS = Map.of(
         "lower", String::toLowerCase,
@@ -46,8 +49,12 @@ public class ExpressionEvaluator {
         if (expressions == null || expressions.isEmpty()) {
             throw new ExpressionEvaluationException("At least one expression is required.");
         }
+
         return expressions.stream()
-            .map(expr -> evaluate(expr, inputs))
+            .map(expr -> {
+                log.debug("Evaluating expression: {}", expr);
+                return evaluate(expr, inputs);
+            })
             .toList();
     }
 
@@ -77,9 +84,11 @@ public class ExpressionEvaluator {
             String rawFunctionChain = matcher.group(2);
 
             if (!inputs.containsKey(inputKey)) {
+                log.error("Missing input for key: {}", inputKey);
                 throw new ExpressionEvaluationException("Missing input for key: " + inputKey);
             }
 
+            log.debug("Applying function(s) on key: {}", inputKey);
             String inputValue = inputs.get(inputKey);
             return applyFunctions(inputValue, parseFunctionChain(rawFunctionChain));
         }
