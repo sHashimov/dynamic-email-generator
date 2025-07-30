@@ -17,7 +17,7 @@ class EmailGeneratorServiceTest {
 
     @Test
     @DisplayName("Generates correct email from valid single expression")
-    void testGenerateEmail_Success() {
+    void testGenerateEmailSuccess() {
         Map<String, String> inputs = Map.of(
             "input1", "Han",
             "input2", "Solo",
@@ -31,7 +31,7 @@ class EmailGeneratorServiceTest {
         assertNotNull(response);
         assertEquals(1, response.getData().size());
 
-        EmailResultItem email = response.getData().get(0);
+        EmailResultItem email = response.getData().getFirst();
         assertEquals("h.olo@galaxy.com", email.getValue());
     }
 
