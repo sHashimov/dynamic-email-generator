@@ -7,18 +7,32 @@ build/
 *.iml
 out/
 
+# VSCode
+.vscode/
+
 # Logs and compiled files
 *.log
 *.class
 
-# Reports and test output
+# Test reports and output
+/test-results/
+reports/
 *.html
 *.xml
 *.bin
-/test-results/
-reports/
 
-# JARs and local OS files
+# JARs and other artifacts
 *.jar
+
+# macOS and Windows metadata
 .DS_Store
 Thumbs.db
+
+# Docker-related
+docker/volumes/
+
+# Ignore generated self-signed SSL certs
+nginx/certs/
+
+# Optional: ignore override files for local dev (if used)
+docker-compose.override.yml
