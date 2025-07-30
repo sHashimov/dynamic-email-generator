@@ -95,7 +95,7 @@ class EmailGeneratorControllerIntegrationTest {
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error", is("ExpressionError")))
-            .andExpect(jsonPath("$.message", containsString("Malformed expression part")));
+            .andExpect(jsonPath("$.message", containsString("Unknown one-arg function")));
     }
 
     @Test
