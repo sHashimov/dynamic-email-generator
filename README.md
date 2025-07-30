@@ -49,15 +49,16 @@ docker-compose up --build
 ### NGINX Reverse Proxy
 
 * Routes HTTPS on port `9443` to the Spring Boot app
-* Uses a self-signed certificate (`certs/`)
+* Uses a self-signed certificate (`/nginx/certs/`)
 
 ---
 
 ## SSL Setup
 
-To generate a self-signed certificate:
+To generate a self-signed certificate. On root project level run:
 
 ```bash
+cd nginx/
 mkdir certs
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
   -keyout certs/server.key \
@@ -195,7 +196,5 @@ To test the API interactively:
 3. Switch to Dynamic Email Generator - Dev environment
 4. In the "Auth - Login" request, click **Send** to generate a JWT token
 5. Use the "Generate Email" request to test dynamic expression processing
-
-Make sure your local server is running and accessible at `https://localhost:9443`.
 
 ---
