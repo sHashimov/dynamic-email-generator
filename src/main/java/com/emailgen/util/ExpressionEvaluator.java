@@ -43,7 +43,7 @@ public class ExpressionEvaluator {
         "last", (s, n) -> s.length() >= n ? s.substring(s.length() - n) : s
     );
 
-    private static final Pattern INPUT_PATTERN = Pattern.compile("\\{(input\\d+)((\\|[a-z]+(:\\d+)?)+)?}");
+    private static final Pattern INPUT_PATTERN = Pattern.compile("\\{(input\\d+.*?)}");
 
     public static List<String> evaluateAll(List<String> expressions, Map<String, String> inputs) {
         if (expressions == null || expressions.isEmpty()) {
@@ -80,21 +80,26 @@ public class ExpressionEvaluator {
 
         Matcher matcher = INPUT_PATTERN.matcher(part);
         if (matcher.matches()) {
-            String inputKey = matcher.group(1);
-            String rawFunctionChain = matcher.group(2);
+            String rawContent = matcher.group(1); // e.g. "input1|first:2|lower"
 
+            String[] segments = rawContent.split("\\|");
+            String inputKey = segments[0];
+
+            if (!inputKey.matches("input\\d+")) {
+                throw new ExpressionEvaluationException("Invalid input key: " + inputKey);
+            }
             if (!inputs.containsKey(inputKey)) {
-                log.error("Missing input for key: {}", inputKey);
                 throw new ExpressionEvaluationException("Missing input for key: " + inputKey);
             }
 
-            log.debug("Applying function(s) on key: {}", inputKey);
             String inputValue = inputs.get(inputKey);
-            return applyFunctions(inputValue, parseFunctionChain(rawFunctionChain));
+            List<String> functions = Arrays.asList(segments).subList(1, segments.length);
+            return applyFunctions(inputValue, functions);
         }
 
         throw new ExpressionEvaluationException("Malformed expression part: " + part);
     }
+
 
     private static boolean isQuotedLiteral(String part) {
         return (part.startsWith("\"") && part.endsWith("\"")) ||

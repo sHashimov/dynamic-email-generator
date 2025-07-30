@@ -61,7 +61,7 @@ public class JwtUtil {
             log.debug("Extracted roles from token: {}", roles);
             return roles;
         } catch (JwtException e) {
-            log.warn("Failed to extract roles from token: {}", e.getMessage());
+            log.warn("Failed to extract roles from token [{}]: {}", token, e.getMessage());
             throw e;
         }
     }
