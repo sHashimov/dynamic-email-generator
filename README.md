@@ -1,200 +1,193 @@
 # Dynamic Email Generator
 
-A Spring Boot application that dynamically generates email addresses based on user-defined inputs and a custom expression language. It includes API documentation, Docker support, HTTPS reverse proxying, and detailed usage examples.
+A flexible, secure Spring Boot service for generating dynamic email addresses using custom expressions based on user inputs.
 
 ---
 
-## Features
+## 🚀 Features
 
-* Dynamic expression parsing and evaluation
-* Multiple expression support per request
-* Input validation and error handling
-* Dockerized with HTTPS via NGINX reverse proxy
-* Swagger API documentation
-
----
-
-## API Documentation
-
-Swagger UI:
-
-* Local: `http://localhost:8080/swagger-ui.html`
-* Docker/NGINX: `https://localhost:9443/swagger-ui.html`
+- ✅ **Custom Expression Language** for building emails dynamically
+- 🔐 **JWT Authentication** and **Role-Based Authorization** (Admin/User)
+- 🌐 **REST API** documented with Swagger (OpenAPI 3)
+- 🐳 **Dockerized Deployment** with NGINX reverse proxy & HTTPS support
+- 🔧 **Environment Profiles** for dev and prod
+- 📦 Includes Postman collection and test suite
 
 ---
 
-## Run Locally
-
-### 1. Build the Application
+## 🛠 Project Structure
 
 ```bash
-./gradlew clean build
-```
-
-Ensure `build/libs/deg.jar` is created.
-
-### 2. Start via Docker Compose
-
-```bash
-docker-compose up --build
+.
+├── src/main/java/com/emailgen
+│   ├── config          # App configs, JWT, security
+│   ├── controller      # REST controllers (auth, email, health)
+│   ├── dto             # Request/response DTOs
+│   ├── exception       # Custom exceptions & handlers
+│   ├── security        # JWT utils, roles, constants
+│   ├── service         # Business logic for email/auth
+│   └── util            # Expression evaluation engine
+├── src/test            # Unit & integration tests
+├── docker              # Dockerfile & docker-compose.yml
+├── nginx               # SSL certs & nginx.conf
+├── postman             # Collections & environment
+└── resources           # YAML configs for profiles
 ```
 
 ---
 
-### Spring Boot App
+## ⚙️ Setup & Deployment
 
-* Base image: `eclipse-temurin:21-jdk-alpine`
-* Exposes port `8080`
-
-### NGINX Reverse Proxy
-
-* Routes HTTPS on port `9443` to the Spring Boot app
-* Uses a self-signed certificate (`/nginx/certs/`)
-
----
-
-## SSL Setup
-
-To generate a self-signed certificate. On root project level run:
+### 1. 🔧 Generate SSL Certificates
 
 ```bash
-cd nginx/
-mkdir certs
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout certs/server.key \
-  -out certs/server.crt \
+mkdir -p nginx/certs
+openssl req -x509 -nodes -days 365 \
+  -newkey rsa:2048 \
+  -keyout nginx/certs/selfsigned.key \
+  -out nginx/certs/selfsigned.crt \
   -subj "/CN=localhost"
 ```
 
----
+### 2. 🐳 Run with Docker Compose
 
-## Expression Language
-
-The application supports a custom expression language for email generation.
-
-### Basic Syntax
-
-* Input variables: `{input1}`, `{input2}`, etc.
-* Functions are chained with `|`
-* Combine parts with `~`
-
-Example:
-
-```text
-{input1|first:1|lower}~'.'~{input2|all|lower}~'@'~{input3|lower}~'.com'
+```bash
+docker-compose -f docker/docker-compose.yml up --build
 ```
 
-### Supported Functions
+NGINX exposes HTTPS on: [https://localhost:9443](https://localhost:9443)
 
-| Function | Args | Description              |
-| -------- | ---- | ------------------------ |
-| `first`  | :n   | First n characters       |
-| `last`   | :n   | Last n characters        |
-| `all`    | —    | Full input               |
-| `lower`  | —    | Lowercase transformation |
-| `upper`  | —    | Uppercase transformation |
+Swagger UI: [https://localhost:9443/swagger-ui/index.html](https://localhost:9443/swagger-ui/index.html)
 
-### Multiple Expressions
+Use `-k` flag with `curl` to ignore self-signed certificate:
 
-Send multiple expressions in one request to generate multiple outputs.
+```bash
+curl -k https://localhost:9443/actuator/health
+```
 
-Example:
+---
+
+## 🔐 Authentication & Authorization
+
+### JWT Token Login
+
+`POST /api/v1/auth/login`
 
 ```json
 {
-  "inputs": {
-    "input1": "Jane",
-    "input2": "Doe"
-  },
-  "expressions": [
-    "{input1|first:1|lower}~'.'~{input2|all|lower}~'@example.com'",
-    "{input1|all|lower}~'.'~{input2|first:2|lower}~'@example.com'"
-  ]
+  "username": "degadmin",
+  "password": "degadmin123"
+}
+```
+
+Returns:
+
+```json
+{
+  "token": "<JWT-TOKEN>"
+}
+```
+
+- Add `Authorization: Bearer <TOKEN>` to secured API requests
+- Supports roles: `ADMIN`, `USER`, `GUEST`
+
+Example decoded token payload:
+
+```json
+{
+  "sub": "degadmin",
+  "roles": ["ADMIN"],
+  "exp": 1753957317
 }
 ```
 
 ---
 
-## API Endpoints
+## 🧪 Testing with Postman
 
-### POST `/api/v1/generate-email`
+Use included files in `postman/`:
 
-Generates email(s) using the given inputs and expressions.
+- ✅ `dynamic-email-generator.postman_collection.json`
+- 🌐 `dev.postman_environment.json`
 
-**Request Body**:
+---
 
-```json
-{
-  "inputs": {
-    "input1": "Jane",
-    "input2": "Doe"
-  },
-  "expressions": [
-    "{input1|first:1|lower}~'.'~{input2|all|lower}~'@example.com'"
-  ]
-}
+## 📬 Email Expression Examples
+
+Use `GET /api/v1/generate-email?input1=Jean&input2=Mignard&...&expression=...`
+
+Expression:
+
+```bash
+{input1|first:1|lower}~'.'~{input2|last:3|lower}~'@'~{input3|all|lower}~'.'~{input4|all|lower}~'.'~{input5|all|lower}
 ```
 
-**Response**:
+Result:
 
 ```json
 {
   "data": [
     {
-      "id": "j.doe@example.com",
-      "value": "j.doe@example.com"
+      "id": "j.ard@external.peoplespheres.fr",
+      "value": "j.ard@external.peoplespheres.fr"
     }
   ]
 }
 ```
 
-### GET `/api/v1/generate-email`
+For full expression language details, see [`USAGE.md`](USAGE.md)
 
-Generates email using query parameters.
+---
 
-**Query Parameters**:
+## 🧱 Git & Branching Strategy
 
-- `expression` (required): The expression string to evaluate
-- `inputN` (optional): Individual input parameters, e.g., `input1=Jane`
-- `allParams` (optional): JSON string with inputs, used as a fallback
+- Follows `feature/DEG-#_description`, `techdebt/DEG-#`, etc.
+- Commits use ticket reference, e.g., `DEG-7 Fix expression chaining`
+- Uses GitHub Flow with short-lived branches + PRs
 
-Example:
+---
 
-```url
-/api/v1/generate-email?expression={input1|first:1|lower}~'.'~{input2|all|lower}~'@example.com'&input1=Jane&input2=Doe
+## 📌 Environment Config
+
+### application.yml
+
+```yaml
+spring:
+  profiles:
+    active: dev
+server:
+  address: 0.0.0.0
+```
+
+### application-dev.yml
+
+```yaml
+swagger:
+  enabled: true
+logging:
+  level:
+    org.springframework.web: DEBUG
+```
+
+### application-prod.yml
+
+```yaml
+swagger:
+  enabled: false
+logging:
+  level:
+    org.springdoc: ERROR
 ```
 
 ---
 
-## Errors
+## 🧯 Security Best Practices
 
-* Malformed expressions return 400 with descriptive error messages
-* Missing inputs or invalid function names will be flagged accordingly
-
-For full usage details and examples, see [USAGE.md](USAGE.md)
-
----
-
-## CI Pipeline
-
-GitHub Actions workflow:
-
-* Location: `.github/workflows/ci.yml`
-* Triggers on push and PR to `master`
-* Steps: checkout, JDK setup, build, test, healthcheck
+- ✅ Spring Security with CSRF protection
+- ✅ Input validation and error handling
+- ✅ JWT-based access control
+- ✅ HTTPS enforced via NGINX reverse proxy
 
 ---
 
-## Postman Collection
 
-To test the API interactively:
-
-1. Open Postman
-2. Import the following:
-   - `dynamic-email-generator.postman_collection.json`
-   - `dev.postman_environment.json`
-3. Switch to Dynamic Email Generator - Dev environment
-4. In the "Auth - Login" request, click **Send** to generate a JWT token
-5. Use the "Generate Email" request to test dynamic expression processing
-
----
