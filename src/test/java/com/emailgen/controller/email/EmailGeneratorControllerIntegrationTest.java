@@ -54,7 +54,7 @@ class EmailGeneratorControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("Returns 400 when expressions list is missing or empty")
+    @DisplayName("Returns 422 when expressions list is missing or empty")
     void testMissingExpressionsList() throws Exception {
         EmailGenerationRequestDTO request = new EmailGenerationRequestDTO();
         request.setInputs(Map.of("input1", "Jean"));
@@ -63,8 +63,8 @@ class EmailGeneratorControllerIntegrationTest {
         mockMvc.perform(post("/api/v1/generate-email")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").value("BadRequest"))
+            .andExpect(status().isUnprocessableEntity())
+            .andExpect(jsonPath("$.error").value("ValidationError"))
             .andExpect(jsonPath("$.message", containsString("At least one expression")));
     }
 
@@ -99,7 +99,7 @@ class EmailGeneratorControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("Returns 400 when referenced input key is missing")
+    @DisplayName("Returns 422 when referenced input key is missing")
     void testMissingInputKeyGraceful() throws Exception {
         EmailGenerationRequestDTO request = new EmailGenerationRequestDTO();
         request.setInputs(Map.of());
@@ -108,9 +108,9 @@ class EmailGeneratorControllerIntegrationTest {
         mockMvc.perform(post("/api/v1/generate-email")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error", is("ExpressionError")))
-            .andExpect(jsonPath("$.message", is("Missing input for key: input999")));
+            .andExpect(status().isUnprocessableEntity())
+            .andExpect(jsonPath("$.error").value("ValidationError"))
+            .andExpect(jsonPath("$.message", is("inputs: Inputs must not be empty")));
     }
 
     @Test
@@ -124,8 +124,8 @@ class EmailGeneratorControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").value("BadRequest"))
-            .andExpect(jsonPath("$.message").value("Invalid input key: badKey"));
+            .andExpect(jsonPath("$.error").value("ExpressionError"))
+            .andExpect(jsonPath("$.message").value("Missing input for key: input1"));
     }
 
     @Test

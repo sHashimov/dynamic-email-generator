@@ -1,5 +1,6 @@
 package com.emailgen.util;
 
+import com.emailgen.exception.BadRequestException;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import java.util.Map;
@@ -26,7 +27,7 @@ class InputParamResolverTest {
 
     @Test
     void throwsWhenInputsMissing() {
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+        BadRequestException ex = assertThrows(BadRequestException.class, () ->
             InputParamResolver.resolveInputs(Collections.emptyMap(), null)
         );
         assertTrue(ex.getMessage().contains("At least one input parameter"));
@@ -35,7 +36,7 @@ class InputParamResolverTest {
     @Test
     void throwsOnInvalidJson() {
         String invalidJson = "{not:valid";
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+        BadRequestException ex = assertThrows(BadRequestException.class, () ->
             InputParamResolver.resolveInputs(Collections.emptyMap(), invalidJson)
         );
         assertTrue(ex.getMessage().contains("Invalid allParams JSON format."));

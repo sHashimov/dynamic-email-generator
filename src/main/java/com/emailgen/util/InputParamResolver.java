@@ -1,5 +1,6 @@
 package com.emailgen.util;
 
+import com.emailgen.exception.BadRequestException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.experimental.UtilityClass;
@@ -30,12 +31,12 @@ public class InputParamResolver {
                 inputs = mapper.readValue(allParamsJson, new TypeReference<>() {
                 });
             } catch (Exception ex) {
-                throw new IllegalArgumentException("Invalid allParams JSON format.");
+                throw new BadRequestException("Invalid allParams JSON format.");
             }
         }
 
         if (inputs.isEmpty()) {
-            throw new IllegalArgumentException("At least one input parameter (e.g., input1) is required.");
+            throw new BadRequestException("At least one input parameter (e.g., input1) is required.");
         }
 
         return inputs;
