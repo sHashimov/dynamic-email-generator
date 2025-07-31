@@ -2,6 +2,7 @@ package com.emailgen.controller.email;
 
 import com.emailgen.dto.email.EmailGenerationRequestDTO;
 import com.emailgen.dto.email.EmailResponseDTO;
+import com.emailgen.exception.BadRequestException;
 import com.emailgen.service.email.EmailGeneratorService;
 import com.emailgen.util.InputParamResolver;
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,13 +50,8 @@ public class EmailGeneratorController {
     public EmailResponseDTO generateEmails(
         @Parameter(description = "Email generation request containing inputs and expressions")
         @Valid @RequestBody EmailGenerationRequestDTO request) {
-        for (String key : request.getInputs().keySet()) {
-            if (!key.matches("input\\d+")) {
-                throw new IllegalArgumentException("Invalid input key: " + key);
-            }
-        }
         if (request.getExpressions() == null || request.getExpressions().isEmpty()) {
-            throw new IllegalArgumentException("At least one expression is required.");
+            throw new BadRequestException("At least one expression is required.");
         }
 
         EmailResponseDTO response = service.generateEmails(request.getInputs(), request.getExpressions());
@@ -85,8 +81,9 @@ public class EmailGeneratorController {
     ) {
         log.info("Received GET request to generate email with expression: {}", expression);
 
-        if (expression == null || expression.isBlank()) {
-            throw new IllegalArgumentException("The 'expression' parameter is required.");
+        String trimmedExpression = expression != null ? expression.trim() : null;
+        if (trimmedExpression == null || trimmedExpression.isEmpty()) {
+            throw new BadRequestException("The 'expression' parameter is required.");
         }
 
         Map<String, String> resolvedInputs = InputParamResolver.resolveInputs(inputParams, allParamsJson);
