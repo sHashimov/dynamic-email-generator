@@ -1,156 +1,166 @@
-# Dynamic Email Expression Language Guide
+# 📘 USAGE.md — Dynamic Email Generator
 
-This document explains the custom expression language used to dynamically generate email addresses based on user-defined inputs. It covers the syntax, supported functions, complex use cases, and practical application patterns.
+This document explains how to use the **Dynamic Email Generator** API, especially the **expression language** that transforms user-defined inputs into email addresses.
 
 ---
 
-## Expression Syntax
+## 📥 API Endpoints
 
-Expressions are enclosed in curly braces (`{}`) and use **pipe (`|`) operators** to chain transformation functions:
+### 🔐 Authenticate and Get JWT
 
-```text
-{input1|first:2|lower}
+`POST /api/v1/auth/login`
+
+**Request:**
+
+```json
+{
+  "username": "degadmin",
+  "password": "degadmin123"
+}
 ```
 
-You can **combine multiple expressions and literals** using the `~` operator:
+**Response:**
 
-```text
-{input1|first:1|lower}~'.'~{input2|all|lower}~'@'~{input3|all|lower}~'.com'
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+Add this token to future requests:
+
+```
+Authorization: Bearer <JWT-TOKEN>
 ```
 
 ---
 
-## Available Functions
+### ✉️ Generate Email via GET
 
-| Function | Arguments | Description                    | Example   |                 |
-| -------- | --------- | ------------------------------ | --------- | --------------- |
-| `first`  | `:n`      | Takes the first `n` characters | \`{input1 | first:2}`→`Jo\` |
-| `last`   | `:n`      | Takes the last `n` characters  | \`{input2 | last:3}`→`son\` |
-| `all`    | none      | Returns the full value         | \`{input3 | all}`→`Galaxy\` |
-| `lower`  | none      | Converts to lowercase          | \`{input1 | lower}`→`john\` |
-| `upper`  | none      | Converts to uppercase          | \`{input1 | upper}`→`JOHN\` |
+`GET /api/v1/generate-email?input1=...&input2=...&expression=...`
 
----
+### ✉️ Generate Email via POST
 
-## Handling Multiple Emails
+`POST /api/v1/generate-email`
 
-You can define multiple expressions in one request to generate **several emails**:
+**Request body:**
 
 ```json
 {
   "inputs": {
-    "input1": "Jane",
-    "input2": "Doe"
+    "input1": "Jean",
+    "input2": "Mignard",
+    "input3": "external",
+    "input4": "peoplespheres",
+    "input5": "fr"
   },
-  "expressions": [
-    "{input1|first:1|lower}~'.'~{input2|all|lower}~'@example.com'",
-    "{input1|all|lower}~'.'~{input2|first:2|lower}~'@example.com'"
+  "expression": "{input1|first:1|lower}~'.'~{input2|last:3|lower}~'@'~{input3|all|lower}~'.'~{input4|all|lower}~'.'~{input5|all|lower}"
+}
+```
+
+**Response:**
+
+```json
+{
+  "data": [
+    {
+      "id": "j.ard@external.peoplespheres.fr",
+      "value": "j.ard@external.peoplespheres.fr"
+    }
   ]
 }
 ```
 
-**Output:**
+---
 
-```json
-[
-  {"id": "j.doe@example.com", "value": "j.doe@example.com"},
-  {"id": "jane.do@example.com", "value": "jane.do@example.com"}
-]
+## 🧮 Expression Syntax Guide
+
+### 🌤️ Input Reference
+
+Use inputs dynamically with `{inputN}`, where N is any positive number.
+
+### 🔧 Supported Functions
+
+| Function  | Syntax    | Description |                      |
+| --------- | --------- | ----------- | -------------------- |
+| `first:N` | \`{input1 | first:2}\`  | First N characters   |
+| `last:N`  | \`{input2 | last:3}\`   | Last N characters    |
+| `all`     | \`{input3 | all}\`      | Entire string        |
+| `lower`   | \`{input4 | lower}\`    | Convert to lowercase |
+| `upper`   | \`{input5 | upper}\`    | Convert to uppercase |
+
+### 🔗 Concatenation
+
+Use `~` as a **concatenation operator**. You can include literal strings in single quotes:
+
+```bash
+{input1|first:1|lower}~'.'~{input2|last:3|lower}~'@'~{input3|all|lower}~'.'~{input4|all|lower}
 ```
 
 ---
 
-## Practical Examples
+## ✅ More Examples
 
-### 🔹 Basic Example: First initial and last name
+### Basic initials:
 
-```json
-Expression: {input1|first:1|lower}~'.'~{input2|all|lower}~'@company.com'
-Inputs: {"input1": "Luke", "input2": "Skywalker"}
-Output: l.skywalker@company.com
+```bash
+{input1|first:1|lower}~{input2|first:1|lower}~'@domain.com'
 ```
 
-### 🔹 Uppercased version
+**Inputs:**
 
-```json
-Expression: {input1|upper}~'.'~{input2|upper}~'@COMPANY.COM'
-Output: LUKE.SKYWALKER@COMPANY.COM
-```
+- input1: Jean
+- input2: Mignard
 
-### 🔹 Dynamic Domain
-
-```json
-Expression: {input1|lower}~'.'~{input2|lower}~'@'~{input3|lower}~'.com'
-Inputs: input3 = "galaxy"
-Output: luke.skywalker@galaxy.com
-```
-
-### 🔹 Custom Prefix and Suffix
-
-```json
-Expression: 'prefix-'~{input1|first:2|lower}~'-suffix'
-Output: prefix-lu-suffix
-```
+**Result:** `jm@domain.com`
 
 ---
 
-## ⚙️ Operational Guidance
+### Handle long domain names:
 
-### 1. Define your dynamic inputs
-
-Inputs must be named `input1`, `input2`, etc.
-
-```json
-{
-  "input1": "John",
-  "input2": "Smith",
-  "input3": "galaxy"
-}
+```bash
+{input1|lower}~'@'~{input4|all|lower}~'.com'
 ```
 
-### 2. Write expressions using syntax
+**Inputs:**
 
-Use `{}` for input references and `|` for function chains. Combine parts with `~`.
+- input1: support
+- input4: peoplespheres
 
-```json
-"{input1|first:1|lower}~'.'~{input2|all|lower}~'@'~{input3|lower}~'.com'"
-```
-
-### 3. Submit the request via API
-
-```http
-POST /api/v1/generate-email
-Content-Type: application/json
-
-{
-  "inputs": { ... },
-  "expressions": [ ... ]
-}
-```
-
-### 4. Receive structured email output
-
-Each expression returns an entry with `id` and `value` fields.
+**Result:** `support@peoplespheres.com`
 
 ---
 
-## Validation Rules
+### Full Dynamic Example
 
-* Input keys must start with `input` (e.g., `input1`)
-* Functions must match supported syntax
-* All function arguments must be numeric if required (e.g., `first:2`)
-* Malformed or unknown functions will result in a 400 error with a descriptive message
+```bash
+{input1|first:1|lower}~'.'~{input9|last:3|lower}~'@'~{input7|all|lower}~'.'~{input4|all|lower}~'.'~{input11|all|lower}
+```
+
+**Inputs:**
+
+- input1: Han
+- input9: Solo
+- input7: internal
+- input4: peoplespheres
+- input11: io
+
+**Result:** `h.olo@internal.peoplespheres.io`
+
+---
+
+## 🤔 Notes
+
+- If a required input (like `input1`) is missing, you'll get a validation error.
+- The order and naming of input keys (`input1`, `input2`, etc.) matter.
+- Expressions must follow the defined syntax strictly.
 
 ---
 
-## 🧪 Testing Edge Cases
+## 📖 Related Resources
 
-| Scenario           | Expression  | Expected Behavior |                                          |
-| ------------------ | ----------- | ----------------- | ---------------------------------------- |
-| Missing input      | \`{input999 | all}\`            | Error: "Missing input for key: input999" |
-| Malformed function | \`{input1   | first:}\`         | Error: "Malformed function"              |
-| Unknown function   | \`{input1   | reverse}\`        | Error: "Unknown no-arg function"         |
-| Invalid argument   | \`{input1   | first\:x}\`       | Error: "Invalid argument"                |
-
----
+- [Swagger UI](https://localhost:9443/swagger-ui/index.html)
+- [README.md](README.md)
+- Postman Collection: `postman/dynamic-email-generator.postman_collection.json`
+- Environment File: `postman/dev.postman_environment.json`
 
